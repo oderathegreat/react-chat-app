@@ -1,17 +1,49 @@
-import logo from './logo.svg';
+
 import {useState} from 'react';
 
 
 function App() {
 //set chat texts 
-
-
 const [messages, setMessages] = useState([]);
 const [message, setMessage] = useState('');
 
 //set username
-
 const [username, setUsername] = useState('username');
+
+//all chats
+let allMessages = [];
+
+
+useEffect(() => {
+  Pusher.logToConsole = true;
+
+  const pusher = new Pusher('37e6e1e6009001cd3d84', {
+      cluster: 'us2'
+  });
+
+  const channel = pusher.subscribe('chat');
+  channel.bind('message', function (data) {
+      allMessages.push(data);
+      setMessages(allMessages);
+  });
+}, []);
+
+
+//on sendchat function
+const sendchat = async e => {
+  e.preventDefault();
+
+  await fetch('http://localhost:8000/api/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+          username,
+          message
+      })
+  });
+
+  setMessage('');
+}
 
 
   return (
@@ -38,7 +70,7 @@ const [username, setUsername] = useState('username');
    
       <div className="list-group-item list-group-item-action py-3 lh-sm">
 
-          <strong class="mb-1">Chat Replys</strong>
+          
 
 
           {message.map(message => {
@@ -60,6 +92,13 @@ const [username, setUsername] = useState('username');
     
      
     </div>
+
+
+    <form onSubmit={e => sendchat(e)}>
+                <input className="form-control" placeholder="Compose a chat message" value={message}
+                       onChange={e => setMessage(e.target.value)}
+                />
+            </form>
 
     </div>
     
